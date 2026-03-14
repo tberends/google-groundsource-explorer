@@ -125,10 +125,12 @@
                     },
                     y: {
                         display: true,
+                        min: 0,
+                        max: 75000,
                         ticks: {
                             color: "#9398a8",
                             font: { size: 10 },
-                            maxTicksLimit: 4,
+                            stepSize: 25000,
                             callback: (v) => v >= 1000 ? (v / 1000).toFixed(0) + "k" : v,
                         },
                         grid: {

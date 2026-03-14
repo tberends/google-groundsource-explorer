@@ -157,7 +157,7 @@ html, body {
 /* Timeline chart + brush */
 #timeline-wrapper {
     position: relative;
-    height: 100px;
+    height: 150px;
     margin-bottom: 10px;
 }
 
@@ -348,7 +348,7 @@ html, body {
     }
 
     #timeline-wrapper {
-        height: 70px;
+        height: 100px;
     }
 }
 
