@@ -1,0 +1,5 @@
+*.parquet
+groundsource-ea.pdf
+__pycache__/
+*.pyc
+.DS_Store

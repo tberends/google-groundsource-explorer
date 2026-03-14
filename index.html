@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Groundsource Flood Explorer</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+    <div id="app">
+        <header id="header">
+            <div id="header-left">
+                <h1>Groundsource Flood Event Explorer</h1>
+                <nav id="header-nav">
+                    <a href="#" id="link-info" role="button">About dataset</a>
+                </nav>
+            </div>
+            <div id="stats">
+                <span id="stat-events">-</span> flood events
+                <span class="stat-sep">|</span>
+                <span id="stat-range">-</span>
+            </div>
+        </header>
+
+        <div id="map-container">
+            <div id="map"></div>
+            <div id="map-overlay">
+                <div id="current-period"></div>
+            </div>
+        </div>
+
+        <div id="controls-container">
+            <div id="timeline-wrapper">
+                <canvas id="timeline-chart"></canvas>
+                <div id="brush-overlay">
+                    <div id="brush-left" class="brush-handle"></div>
+                    <div id="brush-selection"></div>
+                    <div id="brush-right" class="brush-handle"></div>
+                </div>
+            </div>
+
+            <div id="controls">
+                <div id="animation-controls">
+                    <button id="btn-play" title="Play animation">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                    </button>
+                    <button id="btn-pause" title="Pause animation" class="hidden">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                        </svg>
+                    </button>
+                    <button id="btn-reset" title="Reset to full range">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                            <path d="M12 5V1L7 6l5 5V7c3.31 0 6 2.69 6 6s-2.69 6-6 6-6-2.69-6-6H4c0 4.42 3.58 8 8 8s8-3.58 8-8-3.58-8-8-8z"/>
+                        </svg>
+                    </button>
+                    <div id="speed-control">
+                        <label for="speed-slider">Speed</label>
+                        <input type="range" id="speed-slider" min="1" max="10" value="5" />
+                    </div>
+                </div>
+                <div id="range-display">
+                    <span id="range-start">2000-01</span>
+                    <span class="range-arrow">&rarr;</span>
+                    <span id="range-end">2026-03</span>
+                    <span class="range-count">(<span id="range-event-count">0</span> events)</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="loading-overlay">
+            <div id="loading-spinner"></div>
+            <div id="loading-text">Loading flood data...</div>
+        </div>
+    </div>
+
+    <div id="info-overlay" class="info-overlay hidden" aria-hidden="true">
+        <div class="info-overlay-backdrop"></div>
+        <div class="info-overlay-panel">
+            <header class="info-overlay-header">
+                <h2>About the Groundsource dataset</h2>
+                <button type="button" class="info-overlay-close" title="Close" aria-label="Close">&times;</button>
+            </header>
+            <div class="info-overlay-content">
+                <p class="info-lead">
+                    Groundsource is an open-access global dataset of about <strong>2.6 million</strong> high-resolution historical flood events, curated from the automated processing of over <strong>5 million</strong> news articles across more than <strong>150 countries</strong> (2000–present).
+                </p>
+                <p>
+                    High-quality historical flood data is critical for disaster risk management, model training, and climate attribution. Existing global archives are limited by sparse coverage, coarse resolution, or reliance on prolonged satellite observation. Groundsource addresses this by turning unstructured news into a structured, localized event archive suitable for training predictive models, quantifying exposure, and disaster research.
+                </p>
+                <h3>Methodology</h3>
+                <p>The dataset is built with a four-stage automated pipeline described in the paper:</p>
+                <ul>
+                    <li><strong>Raw news ingestion</strong> — Publicly available articles mentioning floods are aggregated (e.g. via topicality scoring). Article text and publication dates are extracted; geographic entities are annotated.</li>
+                    <li><strong>LLM-based extraction (Gemini)</strong> — The text is processed to determine whether it reports a specific flood event and to extract precise dates and affected locations. Relative time references are anchored to publication date.</li>
+                    <li><strong>Geocoding</strong> — Extracted location names are mapped to spatial polygons (WGS 84) using geocoding services.</li>
+                    <li><strong>Aggregation and filtering</strong> — Location–date pairs are aggregated into spatiotemporal events. Events with area &gt; 5,000 km², diameter &gt; 500 km, or duration &gt; 7 days are filtered out. The result is 2.6 million localized events.</li>
+                </ul>
+                <h3>Data records</h3>
+                <p>Each record in the dataset corresponds to one spatiotemporal flood observation. The dataset is entity-based: a single large real-world flood can appear as multiple entries (e.g. different neighborhoods or towns). Records from 2000 onward are included.</p>
+                <table class="info-table">
+                    <thead><tr><th>Column</th><th>Description</th></tr></thead>
+                    <tbody>
+                        <tr><td><code>uuid</code></td><td>Unique identifier for the record.</td></tr>
+                        <tr><td><code>area_km2</code></td><td>Area of the reported location polygon (km²).</td></tr>
+                        <tr><td><code>start_date</code></td><td>First day (YYYY-MM-DD) with documented evidence of flooding.</td></tr>
+                        <tr><td><code>end_date</code></td><td>Last consecutive day with evidence; equals start_date if single-day.</td></tr>
+                        <tr><td><code>geometry</code></td><td>Spatial boundary (WGS 84 / EPSG:4326): polygon or buffered point.</td></tr>
+                    </tbody>
+                </table>
+                <p>About 82% of events have a footprint under 50 km²; the average footprint is ~142 km², supporting street-level and municipal-scale use cases.</p>
+                <h3>Technical validation</h3>
+                <p>Manual review of 400 randomly selected entries gave <strong>82% practical precision</strong> (accurate + approximate/partial). Spatiotemporal matching against external databases shows that Groundsource captures <strong>85%–100%</strong> of severe flood events in the Global Disaster Alert and Coordination System (GDACS) between 2020 and 2026. Recall is higher for more severe events (e.g. GDACS orange/red alerts). Geographic recall varies with media coverage and language support.</p>
+                <h3>Use in Google Flood Hub (urban flash floods)</h3>
+                <p>Groundsource is used by Google Research to train and evaluate <strong>urban flash flood</strong> forecasts. In March 2026, Google announced the roll-out of Urban Flash Flood forecasts on <a href="https://sites.research.google/floods/l/0/0/3" target="_blank" rel="noopener">Flood Hub</a>, providing up to <strong>24 hours</strong> advance notice in urban areas.</p>
+                <p>Flash floods account for a large share of flood-related fatalities and often occur far from stream gauges, so traditional gauge-based training data is insufficient. The <a href="https://research.google/blog/protecting-cities-with-ai-driven-flash-flood-forecasting/" target="_blank" rel="noopener">AI-driven flash flood forecasting</a> work uses Groundsource as ground truth: Gemini-analyzed news reports were used to build a historical flash-flood dataset that trains and evaluates a new model. The model uses global weather products and runs at 20×20 km resolution, with initial focus on urban areas (population density &gt; 100/km²). Precision and recall in many regions of the Global South are reported to be comparable to those in well-instrumented countries, helping narrow the “warning gap” for life-saving early warning systems.</p>
+                <h3>References</h3>
+                <div class="info-ref"><span class="info-ref-title">Groundsource: A Dataset of Flood Events from News</span><br><span class="info-ref-meta">Mayo, R., Zlydenko, O., Bootbool, M., Fronman, S., Gilon, O., Hassidim, A., Kratzert, F., Loike, G., Matias, Y., Nakar, Y., Nearing, G., Sayag, R., Sicherman, A., Zemach, I., &amp; Cohen, D. (2026). Google Research. EarthArXiv (unreviewed preprint), March 9, 2026.</span><br><a href="https://eartharxiv.org/repository/view/12083/" target="_blank" rel="noopener">EarthArXiv (preprint)</a></div>
+                <div class="info-ref"><span class="info-ref-title">Groundsource dataset (Zenodo)</span><br><span class="info-ref-meta">DOI: 10.5281/zenodo.18647053 — tabular/flat format, WGS 84.</span><br><a href="https://doi.org/10.5281/zenodo.18647053" target="_blank" rel="noopener">https://doi.org/10.5281/zenodo.18647053</a></div>
+                <div class="info-ref"><span class="info-ref-title">Protecting cities with AI-driven flash flood forecasting</span><br><span class="info-ref-meta">Google Research Blog, March 12, 2026. Urban Flash Flood forecasts on Flood Hub; use of Groundsource for training and evaluation.</span><br><a href="https://research.google/blog/protecting-cities-with-ai-driven-flash-flood-forecasting/" target="_blank" rel="noopener">research.google/blog</a></div>
+                <div class="info-ref"><span class="info-ref-title">Introducing Groundsource: Turning news reports into data with Gemini</span><br><span class="info-ref-meta">Google Research Blog, March 12, 2026. Methodology and dataset introduction.</span><br><a href="https://research.google/blog/introducing-groundsource-turning-news-reports-into-data-with-gemini/" target="_blank" rel="noopener">Groundsource Blog</a></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
