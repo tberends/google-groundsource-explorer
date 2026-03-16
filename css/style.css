@@ -58,6 +58,12 @@ html, body {
     gap: 16px;
 }
 
+#header-right {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
 #header-nav {
     display: flex;
     align-items: center;
@@ -86,6 +92,32 @@ html, body {
 .stat-sep {
     margin: 0 8px;
     opacity: 0.4;
+}
+
+.github-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    background: var(--bg-tertiary);
+    text-decoration: none;
+    transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.1s;
+}
+
+.github-link:hover {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--text-primary);
+    transform: translateY(-1px);
+}
+
+.github-icon {
+    width: 18px;
+    height: 18px;
 }
 
 /* Map */
