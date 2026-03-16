@@ -179,19 +179,37 @@ html, body {
 .brush-handle {
     position: absolute;
     top: 0;
-    width: 8px;
+    width: 12px;
     height: 100%;
     background: var(--accent);
-    opacity: 0.7;
+    opacity: 0.9;
     cursor: ew-resize;
     pointer-events: all;
     border-radius: 3px;
-    transition: opacity 0.15s;
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.35);
+    transition: opacity 0.15s, box-shadow 0.15s, transform 0.1s;
+}
+
+.brush-handle::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 2px;
+    height: 14px;
+    border-radius: 999px;
+    background: var(--bg-secondary);
+    box-shadow:
+        -3px 0 0 var(--bg-secondary),
+         3px 0 0 var(--bg-secondary);
+    transform: translate(-50%, -50%);
 }
 
 .brush-handle:hover,
 .brush-handle.active {
     opacity: 1;
+    box-shadow: 0 0 0 3px rgba(77, 166, 255, 0.45);
+    transform: translateX(0);
 }
 
 #brush-selection {
