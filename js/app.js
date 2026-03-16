@@ -380,13 +380,35 @@
         if (state.detailMode) return;
         if (!points || points.length === 0) return;
 
-        const logPoints = points.map(p => {
+        const bounds = map.getBounds();
+        const south = bounds.getSouth();
+        const north = bounds.getNorth();
+        const west = bounds.getWest();
+        const east = bounds.getEast();
+
+        const visible = points.filter(p => {
+            const lat = p[0];
+            const lon = p[1];
+            return lat >= south && lat <= north && lon >= west && lon <= east;
+        });
+
+        const sourcePoints = visible.length > 0 ? visible : points;
+
+        const logPoints = sourcePoints.map(p => {
             const [jLat, jLon] = jitterCoord(p[0], p[1]);
             return [jLat, jLon, Math.log1p(p[2])];
         });
-        const sortedVals = logPoints.map(p => p[2]).sort((a, b) => a - b);
-        const p95 = sortedVals[Math.floor(sortedVals.length * 0.95)] || 1;
-        const scaled = logPoints.map(p => [p[0], p[1], p[2] / p95]);
+
+        const values = logPoints.map(p => p[2]);
+        const minVal = Math.min(...values);
+        const maxVal = Math.max(...values);
+        const range = maxVal - minVal || 1;
+
+        const scaled = logPoints.map(p => [
+            p[0],
+            p[1],
+            (p[2] - minVal) / range
+        ]);
 
         heatLayer = L.heatLayer(scaled, getHeatOpts()).addTo(map);
     }
