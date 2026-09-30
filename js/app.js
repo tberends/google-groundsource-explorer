@@ -55,12 +55,12 @@
         maxBoundsViscosity: 1.0,
     });
 
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a> | Data: <a href="https://doi.org/10.5281/zenodo.18647053">Groundsource</a>',
-        subdomains: "abcd",
-        maxZoom: 19,
-        noWrap: true,
+    L.maplibreGL({
+        style: "https://tiles.openfreemap.org/styles/dark",
     }).addTo(map);
+    map.attributionControl.addAttribution(
+        'Data: <a href="https://doi.org/10.5281/zenodo.18647053">Groundsource</a>'
+    );
 
     let heatLayer = null;
 
